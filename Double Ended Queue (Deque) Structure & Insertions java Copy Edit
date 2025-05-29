@@ -1,0 +1,52 @@
+class Deque {
+    private class Node {
+        int data;
+        Node prev, next;
+        Node(int d) { data = d; }
+    }
+
+    private Node front, rear;
+
+    // Insert at front
+    public void insertFront(int value) {
+        Node newNode = new Node(value);
+        if (front == null) {
+            front = rear = newNode;
+        } else {
+            newNode.next = front;
+            front.prev = newNode;
+            front = newNode;
+        }
+    }
+
+    // Insert at rear
+    public void insertRear(int value) {
+        Node newNode = new Node(value);
+        if (rear == null) {
+            front = rear = newNode;
+        } else {
+            rear.next = newNode;
+            newNode.prev = rear;
+            rear = newNode;
+        }
+    }
+
+    // Print deque from front to rear
+    public void display() {
+        Node temp = front;
+        while (temp != null) {
+            System.out.print(temp.data + " ");
+            temp = temp.next;
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        Deque dq = new Deque();
+        dq.insertFront(10);
+        dq.insertRear(20);
+        dq.insertFront(5);
+        dq.insertRear(30);
+        dq.display(); // Output: 5 10 20 30
+    }
+}
