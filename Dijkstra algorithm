@@ -1,0 +1,55 @@
+import java.util.*;
+
+public class Dijkstra {
+    static class Edge {
+        int to, weight;
+        Edge(int t, int w) { to = t; weight = w; }
+    }
+
+    static int[] dijkstra(int n, List<List<Edge>> graph, int src) {
+        int[] dist = new int[n];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[src] = 0;
+
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+        pq.offer(new int[]{src, 0});
+
+        while (!pq.isEmpty()) {
+            int[] cur = pq.poll();
+            int u = cur[0], curDist = cur[1];
+
+            if (curDist > dist[u]) continue;
+
+            for (Edge e : graph.get(u)) {
+                int v = e.to, w = e.weight;
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    pq.offer(new int[]{v, dist[v]});
+                }
+            }
+        }
+        return dist;
+    }
+
+    public static void main(String[] args) {
+        int n = 5;  // nodes 0 to 4
+        List<List<Edge>> graph = new ArrayList<>();
+        for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+
+        // Add edges (undirected or directed)
+        graph.get(0).add(new Edge(1, 9));
+        graph.get(0).add(new Edge(2, 6));
+        graph.get(0).add(new Edge(3, 5));
+        graph.get(0).add(new Edge(4, 3));
+        graph.get(2).add(new Edge(1, 2));
+        graph.get(2).add(new Edge(3, 4));
+
+        int src = 0;
+        int[] dist = dijkstra(n, graph, src);
+
+        System.out.println("Shortest distances from node " + src + ":");
+        for (int i = 0; i < n; i++) {
+            System.out.println("To node " + i + " = " + dist[i]);
+        }
+    }
+}
