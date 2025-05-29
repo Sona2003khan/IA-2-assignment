@@ -1,0 +1,76 @@
+class Deque {
+    private class Node {
+        int data;
+        Node prev, next;
+        Node(int d) { data = d; }
+    }
+
+    private Node front, rear;
+
+    // Insert at front
+    public void insertFront(int value) {
+        Node newNode = new Node(value);
+        if (front == null) {
+            front = rear = newNode;
+        } else {
+            newNode.next = front;
+            front.prev = newNode;
+            front = newNode;
+        }
+    }
+
+    // Insert at rear
+    public void insertRear(int value) {
+        Node newNode = new Node(value);
+        if (rear == null) {
+            front = rear = newNode;
+        } else {
+            rear.next = newNode;
+            newNode.prev = rear;
+            rear = newNode;
+        }
+    }
+
+    // Delete from front
+    public int deleteFront() {
+        if (front == null) throw new RuntimeException("Deque is empty");
+        int val = front.data;
+        front = front.next;
+        if (front != null) front.prev = null;
+        else rear = null; // deque is now empty
+        return val;
+    }
+
+    // Delete from rear
+    public int deleteRear() {
+        if (rear == null) throw new RuntimeException("Deque is empty");
+        int val = rear.data;
+        rear = rear.prev;
+        if (rear != null) rear.next = null;
+        else front = null; // deque is now empty
+        return val;
+    }
+
+    // Display deque from front to rear
+    public void display() {
+        Node temp = front;
+        while (temp != null) {
+            System.out.print(temp.data + " ");
+            temp = temp.next;
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        Deque dq = new Deque();
+        dq.insertFront(10);
+        dq.insertRear(20);
+        dq.insertFront(5);
+        dq.insertRear(30);
+        dq.display(); // 5 10 20 30
+
+        System.out.println("Deleted from front: " + dq.deleteFront()); // 5
+        System.out.println("Deleted from rear: " + dq.deleteRear());   // 30
+        dq.display(); // 10 20
+    }
+}
