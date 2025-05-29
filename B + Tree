@@ -1,0 +1,147 @@
+import java.util.*;
+
+class BPlusTree {
+    private static final int T = 2; // minimum degree (for simplicity)
+
+    abstract class Node {
+        List<Integer> keys = new ArrayList<>();
+        abstract boolean isLeaf();
+    }
+
+    class InternalNode extends Node {
+        List<Node> children = new ArrayList<>();
+
+        boolean isLeaf() { return false; }
+    }
+
+    class LeafNode extends Node {
+        List<Integer> values = new ArrayList<>();
+        LeafNode next;  // for linked list of leaves
+
+        boolean isLeaf() { return true; }
+    }
+
+    private Node root;
+
+    public BPlusTree() {
+        root = new LeafNode();
+    }
+
+    // Search key in B+ Tree
+    public Integer search(int key) {
+        Node curr = root;
+        while (!curr.isLeaf()) {
+            InternalNode in = (InternalNode) curr;
+            int i = Collections.binarySearch(in.keys, key);
+            int idx = i >= 0 ? i+1 : -i-1;
+            curr = in.children.get(idx);
+        }
+        LeafNode leaf = (LeafNode) curr;
+        int i = Collections.binarySearch(leaf.keys, key);
+        if (i >= 0) return leaf.values.get(i);
+        return null;
+    }
+
+    // Insert key-value pair (value = key here for simplicity)
+    public void insert(int key) {
+        Split result = insert(root, key);
+        if (result != null) {
+            // Root split: create new root
+            InternalNode newRoot = new InternalNode();
+            newRoot.keys.add(result.key);
+            newRoot.children.add(root);
+            newRoot.children.add(result.right);
+            root = newRoot;
+        }
+    }
+
+    // Recursive insert, returns Split if node splits
+    private Split insert(Node node, int key) {
+        if (node.isLeaf()) {
+            LeafNode leaf = (LeafNode) node;
+            int pos = Collections.binarySearch(leaf.keys, key);
+            if (pos >= 0) return null; // ignore duplicates
+            pos = -pos - 1;
+            leaf.keys.add(pos, key);
+            leaf.values.add(pos, key); // value same as key here
+
+            if (leaf.keys.size() > 2 * T) {
+                return splitLeaf(leaf);
+            }
+            return null;
+        } else {
+            InternalNode internal = (InternalNode) node;
+            int pos = Collections.binarySearch(internal.keys, key);
+            pos = pos >= 0 ? pos + 1 : -pos - 1;
+            Split result = insert(internal.children.get(pos), key);
+            if (result != null) {
+                internal.keys.add(pos, result.key);
+                internal.children.add(pos + 1, result.right);
+                if (internal.keys.size() > 2 * T) {
+                    return splitInternal(internal);
+                }
+            }
+            return null;
+        }
+    }
+
+    private Split splitLeaf(LeafNode leaf) {
+        int mid = leaf.keys.size() / 2;
+        LeafNode right = new LeafNode();
+        right.keys.addAll(leaf.keys.subList(mid, leaf.keys.size()));
+        right.values.addAll(leaf.values.subList(mid, leaf.values.size()));
+
+        leaf.keys.subList(mid, leaf.keys.size()).clear();
+        leaf.values.subList(mid, leaf.values.size()).clear();
+
+        right.next = leaf.next;
+        leaf.next = right;
+
+        return new Split(right.keys.get(0), right);
+    }
+
+    private Split splitInternal(InternalNode internal) {
+        int mid = internal.keys.size() / 2;
+        int midKey = internal.keys.get(mid);
+
+        InternalNode right = new InternalNode();
+        right.keys.addAll(internal.keys.subList(mid + 1, internal.keys.size()));
+        right.children.addAll(internal.children.subList(mid + 1, internal.children.size()));
+
+        internal.keys.subList(mid, internal.keys.size()).clear();
+        internal.children.subList(mid + 1, internal.children.size()).clear();
+
+        return new Split(midKey, right);
+    }
+
+    private class Split {
+        int key;
+        Node right;
+        Split(int k, Node r) { key = k; right = r; }
+    }
+
+    // Simple traversal print (inorder keys in leaves)
+    public void printLeaves() {
+        Node curr = root;
+        while (!curr.isLeaf()) {
+            curr = ((InternalNode) curr).children.get(0);
+        }
+        LeafNode leaf = (LeafNode) curr;
+        while (leaf != null) {
+            for (int k : leaf.keys) System.out.print(k + " ");
+            leaf = leaf.next;
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        BPlusTree tree = new BPlusTree();
+        int[] keys = {10, 20, 5, 6, 12, 30, 7, 17};
+        for (int k : keys) tree.insert(k);
+
+        tree.printLeaves(); // 5 6 7 10 12 17 20 30
+
+        System.out.println(tree.search(6));   // 6
+        System.out.println(tree.search(15));  // null
+    }
+}
