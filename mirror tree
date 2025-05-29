@@ -1,0 +1,42 @@
+class Node {
+    int val;
+    Node left, right;
+    Node(int v) { val = v; }
+}
+
+public class MirrorTree {
+    public static Node mirror(Node root) {
+        if (root == null) return null;
+
+        // swap left and right subtree
+        Node temp = root.left;
+        root.left = mirror(root.right);
+        root.right = mirror(temp);
+
+        return root;
+    }
+
+    // Inorder traversal to verify
+    public static void inorder(Node root) {
+        if (root == null) return;
+        inorder(root.left);
+        System.out.print(root.val + " ");
+        inorder(root.right);
+    }
+
+    public static void main(String[] args) {
+        Node root = new Node(1);
+        root.left = new Node(2);
+        root.right = new Node(3);
+        root.left.left = new Node(4);
+        root.left.right = new Node(5);
+
+        System.out.print("Original inorder: ");
+        inorder(root);
+
+        mirror(root);
+
+        System.out.print("\nMirrored inorder: ");
+        inorder(root);
+    }
+}
