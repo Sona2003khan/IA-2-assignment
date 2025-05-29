@@ -1,0 +1,42 @@
+class FenwickTree {
+    private int[] tree;
+
+    public FenwickTree(int size) {
+        tree = new int[size + 1]; // 1-based indexing
+    }
+
+    // Add value to index (0-based)
+    public void update(int index, int value) {
+        index++; // shift to 1-based
+        while (index < tree.length) {
+            tree[index] += value;
+            index += index & -index;
+        }
+    }
+
+    // Query prefix sum from 0 to index (0-based)
+    public int query(int index) {
+        index++; // shift to 1-based
+        int sum = 0;
+        while (index > 0) {
+            sum += tree[index];
+            index -= index & -index;
+        }
+        return sum;
+    }
+
+    // Query sum in range [left, right] (0-based)
+    public int rangeQuery(int left, int right) {
+        return query(right) - query(left - 1);
+    }
+
+    public static void main(String[] args) {
+        FenwickTree ft = new FenwickTree(10);
+        ft.update(0, 5); // arr[0] += 5
+        ft.update(3, 2); // arr[3] += 2
+        ft.update(7, 1); // arr[7] += 1
+
+        System.out.println(ft.query(3));       // Output: 7 (5 at 0, 2 at 3)
+        System.out.println(ft.rangeQuery(0, 7)); // Output: 8
+    }
+}
