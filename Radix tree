@@ -1,0 +1,105 @@
+import java.util.*;
+
+class RadixTree {
+    class Node {
+        String edge;              // edge label
+        Map<Character, Node> children = new HashMap<>();
+        boolean isWord = false;
+
+        Node(String edge) {
+            this.edge = edge;
+        }
+    }
+
+    Node root = new Node("");
+
+    // Insert word into Radix Tree
+    public void insert(String word) {
+        Node curr = root;
+        while (word.length() > 0) {
+            char ch = word.charAt(0);
+            if (!curr.children.containsKey(ch)) {
+                // No matching edge, add new node
+                curr.children.put(ch, new Node(word));
+                curr.children.get(ch).isWord = true;
+                return;
+            }
+
+            Node next = curr.children.get(ch);
+            String label = next.edge;
+
+            // Find common prefix length
+            int i = 0;
+            while (i < label.length() && i < word.length() && label.charAt(i) == word.charAt(i)) {
+                i++;
+            }
+
+            if (i == label.length()) {
+                // Edge fully matches, move deeper
+                curr = next;
+                word = word.substring(i);
+            } else {
+                // Split edge
+                String commonPrefix = label.substring(0, i);
+                String labelSuffix = label.substring(i);
+                String wordSuffix = word.substring(i);
+
+                // Create new intermediate node with common prefix
+                Node splitNode = new Node(commonPrefix);
+
+                // Reassign existing edge
+                splitNode.children.put(labelSuffix.charAt(0), new Node(labelSuffix));
+                splitNode.children.get(labelSuffix.charAt(0)).children = next.children;
+                splitNode.children.get(labelSuffix.charAt(0)).isWord = next.isWord;
+
+                // Reset next node to splitNode
+                curr.children.put(ch, splitNode);
+
+                if (wordSuffix.length() > 0) {
+                    splitNode.children.put(wordSuffix.charAt(0), new Node(wordSuffix));
+                    splitNode.children.get(wordSuffix.charAt(0)).isWord = true;
+                } else {
+                    splitNode.isWord = true;
+                }
+                return;
+            }
+        }
+        curr.isWord = true;
+    }
+
+    // Search word in Radix Tree
+    public boolean search(String word) {
+        Node curr = root;
+        while (word.length() > 0) {
+            char ch = word.charAt(0);
+            if (!curr.children.containsKey(ch)) return false;
+
+            Node next = curr.children.get(ch);
+            String label = next.edge;
+
+            if (word.startsWith(label)) {
+                word = word.substring(label.length());
+                curr = next;
+            } else {
+                return false;
+            }
+        }
+        return curr.isWord;
+    }
+
+    public static void main(String[] args) {
+        RadixTree rt = new RadixTree();
+        rt.insert("romane");
+        rt.insert("romanus");
+        rt.insert("romulus");
+        rt.insert("rubens");
+        rt.insert("ruber");
+        rt.insert("rubicon");
+        rt.insert("rubicundus");
+
+        System.out.println(rt.search("romane"));   // true
+        System.out.println(rt.search("roman"));    // false
+        System.out.println(rt.search("rubicon"));  // true
+        System.out.println(rt.search("rubicund")); // false
+    }
+}
